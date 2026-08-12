@@ -1,0 +1,34 @@
+# Production profile — secrets via env vars only, minimal exposure
+spring:
+  datasource:
+    url: ${JOB_DB_URL}
+    username: ${JOB_DB_USER}
+    password: ${JOB_DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${HIKARI_MAX_POOL:20}
+      minimum-idle: ${HIKARI_MIN_IDLE:5}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP}
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    root: WARN
+    com.jobintel: INFO
+
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+
+job:
+  outbox:
+    poll-interval-ms: ${JOB_OUTBOX_POLL_MS:1000}

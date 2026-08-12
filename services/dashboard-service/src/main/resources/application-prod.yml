@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: ${DASHBOARD_DB_URL}
+    username: ${DASHBOARD_DB_USER}
+    password: ${DASHBOARD_DB_PASSWORD}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP}
+
+logging:
+  level:
+    root: WARN
+    com.jobintel: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus

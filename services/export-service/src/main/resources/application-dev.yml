@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: ${EXPORT_DB_URL:jdbc:postgresql://postgres:5432/export_db}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:kafka:9092}
+
+job:
+  service:
+    url: ${JOB_SERVICE_URL:http://job-service:8082}
+
+export:
+  storage:
+    path: ${EXPORT_STORAGE_PATH:/tmp/exports}
+
+logging:
+  level:
+    com.jobintel: DEBUG

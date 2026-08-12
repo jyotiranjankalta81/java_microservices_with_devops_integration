@@ -1,0 +1,217 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./infrastructure/postgres/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      CLUSTER_ID: 0PmstY-7SgeOcSw43WMMKQ
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - "8090:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    depends_on:
+      - kafka
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ALLOW_EMBEDDING: "true"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+    volumes:
+      - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.61.0
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+
+  loki:
+    image: grafana/loki:3.0.0
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+
+  promtail:
+    image: grafana/promtail:3.0.0
+    ports:
+      - "9080:9080"
+    volumes:
+      - ./infrastructure/promtail/promtail.yml:/etc/promtail/promtail.yml
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    command: -config.file=/etc/promtail/promtail.yml
+    depends_on:
+      - loki
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.service
+      args:
+        SERVICE_MODULE: auth-service
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      AUTH_DB_URL: jdbc:postgresql://postgres:5432/auth_db
+      AUTH_DB_USER: auth_user
+      AUTH_DB_PASSWORD: auth_pass
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-use-256-bit-secret-key-minimum!!}
+    depends_on:
+      - postgres
+    ports:
+      - "8081:8081"
+
+  job-service:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.service
+      args:
+        SERVICE_MODULE: job-service
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      JOB_DB_URL: jdbc:postgresql://postgres:5432/job_db
+      JOB_DB_USER: job_user
+      JOB_DB_PASSWORD: job_pass
+      KAFKA_BOOTSTRAP: kafka:9092
+    depends_on:
+      - postgres
+      - kafka
+    ports:
+      - "8082:8082"
+
+  dashboard-service:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.service
+      args:
+        SERVICE_MODULE: dashboard-service
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DASHBOARD_DB_URL: jdbc:postgresql://postgres:5432/dashboard_db
+      DASHBOARD_DB_USER: dashboard_user
+      DASHBOARD_DB_PASSWORD: dashboard_pass
+      KAFKA_BOOTSTRAP: kafka:9092
+    depends_on:
+      - postgres
+      - kafka
+    ports:
+      - "8083:8083"
+
+  export-service:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.service
+      args:
+        SERVICE_MODULE: export-service
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      EXPORT_DB_URL: jdbc:postgresql://postgres:5432/export_db
+      EXPORT_DB_USER: export_user
+      EXPORT_DB_PASSWORD: export_pass
+      KAFKA_BOOTSTRAP: kafka:9092
+      JOB_SERVICE_URL: ${JOB_SERVICE_URL:-http://job-service:8082}
+    depends_on:
+      - postgres
+      - kafka
+      - job-service
+    ports:
+      - "8084:8084"
+
+  audit-service:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.service
+      args:
+        SERVICE_MODULE: audit-service
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      AUDIT_DB_URL: jdbc:postgresql://postgres:5432/audit_db
+      AUDIT_DB_USER: audit_user
+      AUDIT_DB_PASSWORD: audit_pass
+      KAFKA_BOOTSTRAP: kafka:9092
+    depends_on:
+      - postgres
+      - kafka
+    ports:
+      - "8085:8085"
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.service
+      args:
+        SERVICE_MODULE: notification-service
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      KAFKA_BOOTSTRAP: kafka:9092
+    depends_on:
+      - kafka
+    ports:
+      - "8086:8086"
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.service
+      args:
+        SERVICE_MODULE: api-gateway
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      AUTH_SERVICE_URL: http://auth-service:8081
+      JOB_SERVICE_URL: ${JOB_SERVICE_URL:-http://job-service:8082}
+      DASHBOARD_SERVICE_URL: http://dashboard-service:8083
+      EXPORT_SERVICE_URL: http://export-service:8084
+      AUDIT_SERVICE_URL: http://audit-service:8085
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-use-256-bit-secret-key-minimum!!}
+    depends_on:
+      - auth-service
+      - job-service
+      - dashboard-service
+      - export-service
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - api-gateway

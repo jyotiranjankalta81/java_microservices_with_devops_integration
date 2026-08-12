@@ -1,0 +1,74 @@
+spring:
+  application:
+    name: api-gateway
+  main:
+    web-application-type: reactive
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: ${AUTH_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/auth/**, /api/users/**
+        - id: job-service
+          uri: ${JOB_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/jobs/**
+        - id: dashboard-service
+          uri: ${DASHBOARD_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/dashboard/**
+        - id: export-service
+          uri: ${EXPORT_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/export/**
+        - id: audit-service
+          uri: ${AUDIT_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/api/audit/**
+
+jwt:
+  secret: ${JWT_SECRET:change-me-in-production-use-256-bit-secret-key-minimum!!}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://jaeger:4318/v1/traces}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      jobService:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+      authService:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+  timelimiter:
+    instances:
+      jobService:
+        timeoutDuration: 5s
+      authService:
+        timeoutDuration: 3s
+
+logging:
+  level:
+    root: INFO
+    com.jobintel: DEBUG
+    org.springframework.cloud.gateway: INFO
+  pattern:
+    console: "%d{ISO8601} %-5level [%thread] service=api-gateway traceId=%X{traceId} correlationId=%X{correlationId} userId=%X{userId} - %msg%n"

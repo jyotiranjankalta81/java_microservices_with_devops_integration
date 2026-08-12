@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: ${AUDIT_DB_URL:jdbc:postgresql://postgres:5432/audit_db}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:kafka:9092}
+
+logging:
+  level:
+    com.jobintel: DEBUG

@@ -1,0 +1,28 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: ${AUTH_SERVICE_URL:http://auth-service:8081}
+          predicates:
+            - Path=/api/auth/**, /api/users/**
+        - id: job-service
+          uri: ${JOB_SERVICE_URL:http://job-service:8082}
+          predicates:
+            - Path=/api/jobs/**
+        - id: dashboard-service
+          uri: ${DASHBOARD_SERVICE_URL:http://dashboard-service:8083}
+          predicates:
+            - Path=/api/dashboard/**
+        - id: export-service
+          uri: ${EXPORT_SERVICE_URL:http://export-service:8084}
+          predicates:
+            - Path=/api/export/**
+        - id: audit-service
+          uri: ${AUDIT_SERVICE_URL:http://audit-service:8085}
+          predicates:
+            - Path=/api/audit/**
+
+logging:
+  level:
+    com.jobintel: DEBUG

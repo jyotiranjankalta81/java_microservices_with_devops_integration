@@ -1,0 +1,9 @@
+logging:
+  level:
+    root: INFO
+    com.jobintel: DEBUG
+    org.springframework.kafka: INFO
+
+spring:
+  jpa:
+    show-sql: false

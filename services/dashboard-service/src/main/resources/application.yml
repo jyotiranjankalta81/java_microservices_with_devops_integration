@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: dashboard-service
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  datasource:
+    url: ${DASHBOARD_DB_URL:jdbc:postgresql://localhost:5432/dashboard_db}
+    username: ${DASHBOARD_DB_USER:dashboard_user}
+    password: ${DASHBOARD_DB_PASSWORD:dashboard_pass}
+    hikari:
+      pool-name: DashboardServicePool
+      maximum-pool-size: ${HIKARI_MAX_POOL:5}
+      minimum-idle: ${HIKARI_MIN_IDLE:1}
+      connection-timeout: ${HIKARI_CONN_TIMEOUT:30000}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    consumer:
+      group-id: dashboard-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
+
+server:
+  port: ${SERVER_PORT:8083}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://jaeger:4318/v1/traces}
+
+logging:
+  level:
+    root: INFO
+    com.jobintel: DEBUG
+    org.hibernate.SQL: DEBUG
+    com.zaxxer.hikari: DEBUG
+  pattern:
+    console: "%d{ISO8601} %-5level [%thread] service=dashboard-service traceId=%X{traceId} correlationId=%X{correlationId} userId=%X{userId} - %msg%n"

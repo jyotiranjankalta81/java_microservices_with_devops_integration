@@ -1,0 +1,8 @@
+logging:
+  level:
+    root: INFO
+    com.jobintel: DEBUG
+
+export:
+  storage:
+    path: /tmp/exports

@@ -1,0 +1,15 @@
+# Dev / Docker Compose profile — service hostnames from docker network
+spring:
+  datasource:
+    url: ${JOB_DB_URL:jdbc:postgresql://postgres:5432/job_db}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:kafka:9092}
+
+logging:
+  level:
+    root: INFO
+    com.jobintel: DEBUG
+
+job:
+  outbox:
+    poll-interval-ms: 2000

@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: ${DASHBOARD_DB_URL:jdbc:postgresql://postgres:5432/dashboard_db}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:kafka:9092}
+
+logging:
+  level:
+    com.jobintel: DEBUG
