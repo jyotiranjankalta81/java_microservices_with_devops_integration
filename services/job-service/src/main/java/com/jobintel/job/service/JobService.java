@@ -14,6 +14,8 @@ import com.jobintel.job.repository.*;
 import com.jobintel.job.repository.spec.JobSpecifications;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -57,6 +59,7 @@ public class JobService {
         return jobMapper.toResponse(saved);
     }
 
+    @Cacheable(value = "jobsCache", key = "#jobId + '-' + #userId", unless = "#result == null")
     @Transactional(readOnly = true)
     public JobResponse getJob(UUID userId, Long jobId) {
         Job job = findJobForUser(userId, jobId);
@@ -78,6 +81,7 @@ public class JobService {
         return result;
     }
 
+    @CacheEvict(value = "jobsCache", key = "#jobId + '-' + #userId")
     @Transactional
     public JobResponse updateJob(UUID userId, Long jobId, JobUpdateRequest request) {
         Job job = findJobForUser(userId, jobId);
@@ -96,6 +100,7 @@ public class JobService {
         }
     }
 
+    @CacheEvict(value = "jobsCache", key = "#jobId + '-' + #userId")
     @Transactional
     public void deleteJob(UUID userId, Long jobId) {
         Job job = findJobForUser(userId, jobId);

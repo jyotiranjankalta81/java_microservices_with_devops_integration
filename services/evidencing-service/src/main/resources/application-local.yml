@@ -1,0 +1,14 @@
+spring:
+  jpa:
+    show-sql: false
+  flyway:
+    enabled: true
+
+logging:
+  level:
+    root: INFO
+    com.jobintel.evidencing: DEBUG
+
+springdoc:
+  swagger-ui:
+    enabled: true

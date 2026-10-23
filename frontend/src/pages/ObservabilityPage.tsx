@@ -27,6 +27,18 @@ const TOOLS: ObservabilityTool[] = [
     color: '#f97316',
   },
   {
+    id: 'loki-logs',
+    name: 'Loki Log Explorer',
+    category: 'Log Aggregation & Live Search',
+    description: 'Centralized real-time log stream search, error tracking, and keyword filtering across all Docker microservice containers.',
+    url: 'http://localhost:3001/d/job-intel-loki-explorer/loki-microservice-log-explorer',
+    embedUrl: 'http://localhost:3001/d/job-intel-loki-explorer/loki-microservice-log-explorer?orgId=1&kiosk=tv',
+    port: 3100,
+    credentials: 'admin / admin',
+    icon: '📜',
+    color: '#eab308',
+  },
+  {
     id: 'jaeger',
     name: 'Jaeger Tracing UI',
     category: 'Distributed Tracing & APM',

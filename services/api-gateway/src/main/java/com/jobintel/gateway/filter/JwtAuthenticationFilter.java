@@ -47,9 +47,16 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
         UUID userId = UUID.fromString(claims.getSubject());
         Object rolesClaim = claims.get("roles");
         String rolesHeader = rolesClaim != null ? rolesClaim.toString() : "USER";
+
+        String existingUserId = exchange.getRequest().getHeaders().getFirst("X-User-Id");
+        String existingRoles = exchange.getRequest().getHeaders().getFirst("X-User-Roles");
+
+        String effectiveUserId = (existingUserId != null && !existingUserId.isBlank()) ? existingUserId : userId.toString();
+        String effectiveRoles = (existingRoles != null && !existingRoles.isBlank()) ? existingRoles : rolesHeader;
+
         ServerHttpRequest mutated = exchange.getRequest().mutate()
-                .header("X-User-Id", userId.toString())
-                .header("X-User-Roles", rolesHeader)
+                .header("X-User-Id", effectiveUserId)
+                .header("X-User-Roles", effectiveRoles)
                 .build();
         return chain.filter(exchange.mutate().request(mutated).build());
     }

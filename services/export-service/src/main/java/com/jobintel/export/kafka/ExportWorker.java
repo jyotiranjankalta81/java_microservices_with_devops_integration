@@ -14,11 +14,12 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 
@@ -30,7 +31,7 @@ public class ExportWorker {
     private final ExportJobRepository repository;
     private final ObjectMapper objectMapper;
     private final KafkaTemplate<String, String> kafkaTemplate;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final WebClient.Builder webClientBuilder;
 
     @Value("${job.service.url:http://localhost:8082}")
     private String jobServiceUrl;
@@ -50,9 +51,12 @@ public class ExportWorker {
             Files.createDirectories(Path.of(storagePath));
             Path file = Path.of(storagePath, job.getId() + ".xlsx");
 
-            var jobs = restTemplate.getForObject(
-                    jobServiceUrl + "/api/jobs?size=1000",
-                    Map.class);
+            WebClient webClient = webClientBuilder.build();
+            var jobs = webClient.get()
+                    .uri(jobServiceUrl + "/api/jobs?size=1000")
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block(Duration.ofSeconds(5));
 
             try (XSSFWorkbook workbook = new XSSFWorkbook()) {
                 Sheet sheet = workbook.createSheet("Jobs");

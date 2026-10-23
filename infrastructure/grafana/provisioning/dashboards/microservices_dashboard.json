@@ -14,7 +14,7 @@
       "id": 1,
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "datasource": { "type": "prometheus", "uid": "prometheus-ds" },
           "expr": "sum(http_server_requests_seconds_count)",
           "legendFormat": "Requests"
         }
@@ -27,7 +27,7 @@
       "id": 2,
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "datasource": { "type": "prometheus", "uid": "prometheus-ds" },
           "expr": "sum(rate(http_server_requests_seconds_count[1m])) by (job)",
           "legendFormat": "{{job}}"
         }
@@ -40,7 +40,7 @@
       "id": 3,
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "datasource": { "type": "prometheus", "uid": "prometheus-ds" },
           "expr": "jvm_memory_used_bytes{area=\"heap\"}",
           "legendFormat": "{{job}}"
         }
@@ -53,7 +53,7 @@
       "id": 4,
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "datasource": { "type": "prometheus", "uid": "prometheus-ds" },
           "expr": "hikaricp_connections_active",
           "legendFormat": "{{job}} - {{pool}}"
         }
@@ -66,9 +66,11 @@
       "id": 5,
       "targets": [
         {
-          "datasource": { "type": "loki", "name": "Loki" },
-          "expr": "{container_name=~\".+\"}",
-          "legendFormat": "{{container_name}}"
+          "datasource": { "type": "loki", "uid": "loki-ds" },
+          "expr": "{service=~\".+\"}",
+          "queryType": "range",
+          "refId": "A",
+          "legendFormat": "{{service}}"
         }
       ],
       "options": {

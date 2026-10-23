@@ -1,0 +1,64 @@
+spring:
+  application:
+    name: evidencing-service
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  datasource:
+    url: ${EVIDENCING_DB_URL:jdbc:postgresql://localhost:5432/evidencing_db}
+    username: ${EVIDENCING_DB_USER:evidencing_user}
+    password: ${EVIDENCING_DB_PASSWORD:evidencing_pass}
+    hikari:
+      pool-name: EvidencingServicePool
+      maximum-pool-size: ${HIKARI_MAX_POOL:10}
+      minimum-idle: ${HIKARI_MIN_IDLE:2}
+      connection-timeout: ${HIKARI_CONN_TIMEOUT:30000}
+      idle-timeout: ${HIKARI_IDLE_TIMEOUT:600000}
+      max-lifetime: ${HIKARI_MAX_LIFETIME:1800000}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: ${SERVER_PORT:8087}
+
+jwt:
+  secret: ${JWT_SECRET:change-me-in-production-use-256-bit-secret-key-minimum!!}
+
+aws:
+  region: ${AWS_REGION:us-east-1}
+  endpoint: ${AWS_ENDPOINT:}
+  s3:
+    bucket: ${AWS_S3_BUCKET:evidencing-media-bucket}
+    url-expiration-minutes: ${AWS_S3_URL_EXPIRATION_MINUTES:15}
+    local-storage-path: ${AWS_S3_LOCAL_STORAGE_PATH:./target/evidencing-storage}
+  sqs:
+    publication-queue: ${AWS_SQS_PUBLICATION_QUEUE:evidencing-post-publication-queue}
+    publication-dlq: ${AWS_SQS_PUBLICATION_DLQ:evidencing-post-publication-dlq}
+    notifications-queue: ${AWS_SQS_NOTIFICATIONS_QUEUE:evidencing-notifications-queue}
+    notifications-dlq: ${AWS_SQS_NOTIFICATIONS_DLQ:evidencing-notifications-dlq}
+    max-retry-attempts: 3
+    simulate-local-workers: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs

@@ -22,6 +22,10 @@ spring:
           uri: ${AUDIT_SERVICE_URL:http://audit-service:8085}
           predicates:
             - Path=/api/audit/**
+        - id: evidencing-service
+          uri: ${EVIDENCING_SERVICE_URL:http://evidencing-service:8087}
+          predicates:
+            - Path=/api/evidencing/**
 
 logging:
   level:

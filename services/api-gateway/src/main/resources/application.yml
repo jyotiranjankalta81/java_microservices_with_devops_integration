@@ -1,6 +1,10 @@
 spring:
   application:
     name: api-gateway
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
   main:
     web-application-type: reactive
   profiles:
@@ -12,10 +16,18 @@ spring:
           uri: ${AUTH_SERVICE_URL:http://localhost:8081}
           predicates:
             - Path=/api/auth/**, /api/users/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: authService
         - id: job-service
           uri: ${JOB_SERVICE_URL:http://localhost:8082}
           predicates:
             - Path=/api/jobs/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: jobService
         - id: dashboard-service
           uri: ${DASHBOARD_SERVICE_URL:http://localhost:8083}
           predicates:
@@ -28,6 +40,10 @@ spring:
           uri: ${AUDIT_SERVICE_URL:http://localhost:8085}
           predicates:
             - Path=/api/audit/**
+        - id: evidencing-service
+          uri: ${EVIDENCING_SERVICE_URL:http://localhost:8087}
+          predicates:
+            - Path=/api/evidencing/**
 
 jwt:
   secret: ${JWT_SECRET:change-me-in-production-use-256-bit-secret-key-minimum!!}

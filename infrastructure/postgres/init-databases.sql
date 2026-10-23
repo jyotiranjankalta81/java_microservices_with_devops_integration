@@ -12,3 +12,6 @@ CREATE DATABASE export_db OWNER export_user;
 
 CREATE USER audit_user WITH PASSWORD 'audit_pass';
 CREATE DATABASE audit_db OWNER audit_user;
+
+CREATE USER evidencing_user WITH PASSWORD 'evidencing_pass';
+CREATE DATABASE evidencing_db OWNER evidencing_user;

@@ -9,6 +9,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <h1>JobIntel</h1>
         <nav>
           <NavLink to="/dashboard">Dashboard</NavLink>
+          <NavLink to="/evidencing">📸 Evidencing</NavLink>
           <NavLink to="/jobs">Jobs</NavLink>
           <NavLink to="/exports">Exports</NavLink>
           <NavLink to="/observability">Observability</NavLink>
